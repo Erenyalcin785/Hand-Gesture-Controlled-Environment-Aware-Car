@@ -1,0 +1,1 @@
+# El-hareketleriyle-kontrol-edilen-evreye-duyarl-ara-
