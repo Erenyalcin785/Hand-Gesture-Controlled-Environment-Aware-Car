@@ -1,0 +1,213 @@
+#include <SoftwareSerial.h>
+#include <DHT.h>
+
+#define DHTPIN 12
+#define DHTTYPE DHT11
+DHT dht(DHTPIN, DHTTYPE);
+
+int sol_i = 8 ;
+int sol_g = 7 ;
+
+int sag_i = 9 ;
+int sag_g = 10 ;
+
+int sol_pwm = 11 ;
+int sag_pwm = 6 ;
+
+int hiz  = 220 ;
+
+SoftwareSerial bluetooth(2, 3); // RX, TX
+
+int echoPins[] = {A0, A2, A4, 4};
+int trigPins[] = {A1, A3, A5, 5};
+long durations[4];
+int distances[4];
+
+int data ;
+
+void setup() {
+  Serial.begin(9600);
+  bluetooth.begin(9600);
+  dht.begin();
+
+  pinMode(sol_i , OUTPUT);
+  pinMode(sol_g , OUTPUT);
+  pinMode(sag_i , OUTPUT);
+  pinMode(sag_g , OUTPUT);
+
+  pinMode(sol_pwm , OUTPUT);
+  pinMode(sag_pwm , OUTPUT);
+
+  for (int i = 0; i < 4; i++) {
+    pinMode(trigPins[i], OUTPUT);
+    pinMode(echoPins[i], INPUT);
+  }
+
+  digitalWrite(sol_i, 0);
+  digitalWrite(sol_g, 0);
+  digitalWrite(sag_i, 0);
+  digitalWrite(sag_g, 0);
+
+  analogWrite(sol_pwm, 0);
+  analogWrite(sag_pwm, 0);
+
+}
+
+int measureDistance(int trigPin, int echoPin) {
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+  long duration = pulseIn(echoPin, HIGH);
+  int distance = duration * 0.034 / 2;
+  return distance;
+}
+
+void loop() {
+  for (int i = 0; i < 4; i++) {
+    distances[i] = measureDistance(trigPins[i], echoPins[i]);
+  }
+
+  float temp = dht.readTemperature();
+  float hum = dht.readHumidity();
+
+  bluetooth.print("D1:");
+  bluetooth.print(distances[0]);
+  bluetooth.print(",D2:");
+  bluetooth.print(distances[1]);
+  bluetooth.print(",D3:");
+  bluetooth.print(distances[2]);
+  bluetooth.print(",D4:");
+  bluetooth.print(distances[3]);
+  bluetooth.print(",T:");
+  bluetooth.print(temp);
+  bluetooth.print(",H:");
+  bluetooth.println(hum);
+
+  delay(100);
+
+
+  data = Serial.read();
+
+  if (distances[1] < 20)
+  {
+    digitalWrite(sol_i, 0);
+    digitalWrite(sol_g, 1);
+    digitalWrite(sag_i, 0);
+    digitalWrite(sag_g, 1);
+
+    analogWrite(sol_pwm, hiz);
+    analogWrite(sag_pwm, hiz);
+    delay(1000);
+    digitalWrite(sol_i, 0);
+    digitalWrite(sol_g, 0);
+    digitalWrite(sag_i, 0);
+    digitalWrite(sag_g, 0);
+
+    analogWrite(sol_pwm, hiz);
+    analogWrite(sag_pwm, hiz);
+    delay(100);
+  }
+  if (distances[3] < 20)
+  {
+    digitalWrite(sol_i, 1);
+    digitalWrite(sol_g, 0);
+    digitalWrite(sag_i, 1);
+    digitalWrite(sag_g, 0);
+
+    analogWrite(sol_pwm, hiz);
+    analogWrite(sag_pwm, hiz);
+    delay(1000);
+    digitalWrite(sol_i, 0);
+    digitalWrite(sol_g, 0);
+    digitalWrite(sag_i, 0);
+    digitalWrite(sag_g, 0);
+
+    analogWrite(sol_pwm, hiz);
+    analogWrite(sag_pwm, hiz);
+  }
+
+
+  if (data == 'F')
+  {
+
+    digitalWrite(sol_i, 1);
+    digitalWrite(sol_g, 0);
+    digitalWrite(sag_i, 1);
+    digitalWrite(sag_g, 0);
+
+    analogWrite(sol_pwm, hiz);
+    analogWrite(sag_pwm, hiz);
+    delay(1000);
+    digitalWrite(sol_i, 0);
+    digitalWrite(sol_g, 0);
+    digitalWrite(sag_i, 0);
+    digitalWrite(sag_g, 0);
+
+    analogWrite(sol_pwm, hiz);
+    analogWrite(sag_pwm, hiz);
+    delay(100);
+  }
+  if (data == 'B')
+  {
+
+    digitalWrite(sol_i, 0);
+    digitalWrite(sol_g, 1);
+    digitalWrite(sag_i, 0);
+    digitalWrite(sag_g, 1);
+
+    analogWrite(sol_pwm, hiz);
+    analogWrite(sag_pwm, hiz);
+    delay(1000);
+    digitalWrite(sol_i, 0);
+    digitalWrite(sol_g, 0);
+    digitalWrite(sag_i, 0);
+    digitalWrite(sag_g, 0);
+
+    analogWrite(sol_pwm, hiz);
+    analogWrite(sag_pwm, hiz);
+    delay(100);
+  }
+  if (data == 'L')
+  {
+
+    digitalWrite(sol_i, 0);
+    digitalWrite(sol_g, 1);
+    digitalWrite(sag_i, 1);
+    digitalWrite(sag_g, 0);
+
+    analogWrite(sol_pwm, hiz);
+    analogWrite(sag_pwm, hiz);
+    delay(1000);
+    digitalWrite(sol_i, 0);
+    digitalWrite(sol_g, 0);
+    digitalWrite(sag_i, 0);
+    digitalWrite(sag_g, 0);
+
+    analogWrite(sol_pwm, hiz);
+    analogWrite(sag_pwm, hiz);
+    delay(100);
+  }
+
+  if (data == 'R')
+  {
+
+    digitalWrite(sol_i, 1);
+    digitalWrite(sol_g, 0);
+    digitalWrite(sag_i, 0);
+    digitalWrite(sag_g, 1);
+
+    analogWrite(sol_pwm, hiz);
+    analogWrite(sag_pwm, hiz);
+    delay(1000);
+    digitalWrite(sol_i, 0);
+    digitalWrite(sol_g, 0);
+    digitalWrite(sag_i, 0);
+    digitalWrite(sag_g, 0);
+
+    analogWrite(sol_pwm, hiz);
+    analogWrite(sag_pwm, hiz);
+    delay(100);
+  }
+}
